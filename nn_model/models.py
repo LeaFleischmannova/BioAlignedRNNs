@@ -748,6 +748,14 @@ class PrimaryVisualCortexModel(nn.Module):
             layer: [] for layer in PrimaryVisualCortexModel.layers_input_parameters
         }
 
+        opto_video = inputs.pop("OPTO_VIDEO", None)
+
+        if opto_video is not None:
+            opto_video = opto_video.to(nn_model.globals.DEVICE)
+            opto_e23 = self.opto_module(opto_video)
+        else:
+            opto_e23 = None
+
         all_hidden_states = hidden_states
         visible_time_steps = inputs[LayerType.X_ON.value].size(1)
         if self.training:
@@ -782,6 +790,14 @@ class PrimaryVisualCortexModel(nn.Module):
 
             for _ in range(self.num_hidden_time_steps):
                 # Perform all hidden time steps.
+                opto_current_time = None
+                if opto_e23 is not None:
+                    if self.training:
+                        # training forward gets only one visible time step,
+                        # so opto_e23 has time dimension 1
+                        opto_current_time = opto_e23[:, 0, :]
+                    else:
+                        opto_current_time = opto_e23[:, visible_time, :]
                 (
                     hidden_states,
                     recurrent_outputs,
@@ -792,6 +808,7 @@ class PrimaryVisualCortexModel(nn.Module):
                     hidden_states,
                     neuron_hidden,
                     synaptic_adaptation_hidden,
+                    opto_current_time=opto_current_time,
                 )
 
                 if self.training:
