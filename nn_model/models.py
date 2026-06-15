@@ -22,6 +22,8 @@ from nn_model.neurons import DNNNeuron, SharedNeuronBase, RNNNeuron
 from nn_model.layer_config import LayerConfig
 from nn_model.connection_learning import compute_neural_distances
 
+from nn_model.opto_layers import OptoConvToExcL23
+
 
 class PrimaryVisualCortexModel(nn.Module):
     """
@@ -154,6 +156,15 @@ class PrimaryVisualCortexModel(nn.Module):
         ]
 
         self.layer_sizes = layer_sizes  # Needed for model architecture definition
+
+        self.use_opto = True    # TODO add --use_opto option
+
+        self.opto_module = OptoConvToExcL23(
+            n_e23_neurons=layer_sizes[LayerType.V1_EXC_L23.value],
+            video_height=16,
+            video_width=16,
+            n_filters=8,
+        )
 
         # Layer configuration.
         self.layers_configs = self._init_layer_configs(
@@ -598,6 +609,7 @@ class PrimaryVisualCortexModel(nn.Module):
         synaptic_adaptation_hidden: Dict[
             str, Dict[str, Optional[Tuple[torch.Tensor, ...]]]
         ],
+        opto_e23_t: Optional[torch.Tensor] = None,
     ) -> Tuple[
         Dict[str, torch.Tensor],
         Dict[str, Optional[Tuple[torch.Tensor, ...]]],
@@ -614,6 +626,7 @@ class PrimaryVisualCortexModel(nn.Module):
         :param neuron_hidden: Neuron model hidden states (if `None` then initialize
         them using pytorch default approach).
         :param synaptic_adaptation_hidden: Hidden states of the synaptic adaptation model.
+        :param opto_e23_t: CNN-transformed optogenetic input for the E_2/3 population at the current time step. Expected shape is (batch_size, n_e23_neurons).
         :return: Returns tuple of dictionary of model predictions for the current time step,
         recurrent network prediction (for evaluation of neuron model functionality) and hidden
         states of neuron models and synaptic adaptation models.
@@ -648,6 +661,9 @@ class PrimaryVisualCortexModel(nn.Module):
                     layer
                 ],  # Hidden steps of the neuron models (needed for RNN neuron models).
             )
+
+            if layer == LayerType.V1_EXC_L23.value and opto_e23_t is not None:
+                current_time_outputs[layer] = current_time_outputs[layer] + opto_e23_t
 
             del layers_input, recurrent_input
             torch.cuda.empty_cache()
