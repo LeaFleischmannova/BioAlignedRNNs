@@ -808,7 +808,7 @@ class PrimaryVisualCortexModel(nn.Module):
                     hidden_states,
                     neuron_hidden,
                     synaptic_adaptation_hidden,
-                    opto_current_time=opto_current_time,
+                    opto_e23_t=opto_current_time,
                 )
 
                 if self.training:
