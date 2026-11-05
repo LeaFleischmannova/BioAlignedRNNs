@@ -10,6 +10,7 @@ from typing import Dict, List, Tuple
 from scipy.sparse import load_npz
 import torch
 from torch.utils.data import Dataset
+import numpy as np
 
 
 class SparseSpikeDataset(Dataset):
@@ -274,6 +275,21 @@ class SparseSpikeDataset(Dataset):
         combined_data = torch.cat(all_data, dim=0)
 
         return combined_data
+    
+    def _load_opto_video(self, exp_names: List[str]) -> torch.Tensor:
+        """
+        Loads optogenetic video for given experiment.
+
+        Expected file:
+            OPTO_VIDEO/opto_{experiment_id}.npy
+
+        Expected shape:
+            (time, height, width)
+
+        Return:
+            (num_trials, time, height, width)
+        """
+        pass    # TODO
 
     def __getitem__(
         self, idx
