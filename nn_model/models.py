@@ -609,7 +609,7 @@ class PrimaryVisualCortexModel(nn.Module):
         synaptic_adaptation_hidden: Dict[
             str, Dict[str, Optional[Tuple[torch.Tensor, ...]]]
         ],
-        opto_e23_t: Optional[torch.Tensor] = None,
+        opto_input_e23_t: Optional[torch.Tensor] = None,
     ) -> Tuple[
         Dict[str, torch.Tensor],
         Dict[str, Optional[Tuple[torch.Tensor, ...]]],
@@ -660,10 +660,8 @@ class PrimaryVisualCortexModel(nn.Module):
                 neuron_hidden[
                     layer
                 ],  # Hidden steps of the neuron models (needed for RNN neuron models).
+                opto_input=opto_input_e23_t,
             )
-
-            if layer == LayerType.V1_EXC_L23.value and opto_e23_t is not None:
-                current_time_outputs[layer] = current_time_outputs[layer] + opto_e23_t
 
             del layers_input, recurrent_input
             torch.cuda.empty_cache()
@@ -752,10 +750,10 @@ class PrimaryVisualCortexModel(nn.Module):
         opto_video = inputs.pop("OPTO_VIDEO", None)
 
         if opto_video is not None:
-            opto_video = opto_video.to(nn_model.globals.DEVICE)     # move optogenetic video to gpu
-            opto_e23 = self.opto_module(opto_video)
+            opto_video = opto_video.to(nn_model.globals.DEVICE)
+            opto_input_e23 = self.opto_module(opto_video)
         else:
-            opto_e23 = None
+            opto_input_e23 = None
 
         all_hidden_states = hidden_states
         visible_time_steps = inputs[LayerType.X_ON.value].size(1)
@@ -792,13 +790,13 @@ class PrimaryVisualCortexModel(nn.Module):
             for _ in range(self.num_hidden_time_steps):
                 # Perform all hidden time steps.
                 opto_current_time = None
-                if opto_e23 is not None:
+                if opto_input_e23 is not None:
                     if self.training:
                         # training forward gets only one visible time step,
                         # so opto_e23 has time dimension 1
-                        opto_current_time = opto_e23[:, 0, :]
+                        opto_current_time = opto_input_e23[:, 0, :]
                     else:
-                        opto_current_time = opto_e23[:, visible_time, :]
+                        opto_current_time = opto_input_e23[:, visible_time, :]
                 (
                     hidden_states,
                     recurrent_outputs,
@@ -809,7 +807,7 @@ class PrimaryVisualCortexModel(nn.Module):
                     hidden_states,
                     neuron_hidden,
                     synaptic_adaptation_hidden,
-                    opto_e23_t=opto_current_time,
+                    opto_input_e23_t=opto_current_time,
                 )
 
                 if self.training:
