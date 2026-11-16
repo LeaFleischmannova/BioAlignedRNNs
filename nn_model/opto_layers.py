@@ -28,14 +28,17 @@ class OptoConvToExcL23(nn.Module):
         self.conv = nn.Sequential(
             nn.Conv2d(1, n_filters, kernel_size=3, padding=1),
             nn.ReLU(),
+            nn.AvgPool2d(kernel_size=2, stride=2),
             nn.Conv2d(n_filters, n_filters, kernel_size=3, padding=1),
             nn.ReLU(),
+            nn.AvgPool2d(kernel_size=2, stride=2),
             nn.Conv2d(n_filters, n_filters, kernel_size=3, padding=1),
             nn.ReLU(),
+            nn.AvgPool2d(kernel_size=2, stride=2),
         )
 
         self.to_e23 = nn.Linear(
-            n_filters * video_height * video_width,
+            n_filters * (video_height // 8) * (video_width // 8),
             n_e23_neurons,
         )
 
