@@ -568,6 +568,14 @@ def init_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Start debugging mode.",
     )
+
+    # Optogenetic stimulation:
+    parser.add_argument(
+        "--optogenetic_stimulation",
+        action="store_true",
+        help="Enable optogenetic stimulation of excitatory layer 2/3.",
+    )
+
     return parser
 
 

@@ -118,6 +118,7 @@ class PrimaryVisualCortexModel(nn.Module):
         parameter_reduction: bool,
         process_invisible: bool,
         model_modules_kwargs: Dict[str, Optional[Dict]],
+        optogenetic_stimulation: bool = False,
     ):
         """
         Initializes model parameters, sets weights constraints and creates model architecture.
@@ -132,6 +133,7 @@ class PrimaryVisualCortexModel(nn.Module):
         :param process_invisible: Flag whether we want to process invisible neurons.
         :param model_modules_kwargs: kwargs of the used neuronal models (if any) and synaptic
         adaptation models.
+        :param optogenetic_stimulation: Whether to enable the optogenetic input module.
         """
         super(PrimaryVisualCortexModel, self).__init__()
 
@@ -157,14 +159,15 @@ class PrimaryVisualCortexModel(nn.Module):
 
         self.layer_sizes = layer_sizes  # Needed for model architecture definition
 
-        self.use_opto = True    # TODO Add --use_opto CLI argument for enabling/disabling optogenetic input.
-
-        self.opto_module = OptoConvToExcL23(
-            n_e23_neurons=layer_sizes[LayerType.V1_EXC_L23.value],
-            video_height=400,
-            video_width=400,
-            n_filters=8,
-        )
+        if optogenetic_stimulation:
+            self.opto_module = OptoConvToExcL23(
+                n_e23_neurons=layer_sizes[LayerType.V1_EXC_L23.value],
+                video_height=400,
+                video_width=400,
+                n_filters=8,
+            )
+        else:
+            self.opto_module = None
 
         # Layer configuration.
         self.layers_configs = self._init_layer_configs(
@@ -749,7 +752,7 @@ class PrimaryVisualCortexModel(nn.Module):
         inputs = inputs.copy()
         opto_video = inputs.pop("OPTO_VIDEO", None)
 
-        if opto_video is not None:
+        if opto_video is not None and self.opto_module is not None:
             opto_video = opto_video.to(nn_model.globals.DEVICE)
             opto_input_e23 = self.opto_module(opto_video)
         else:

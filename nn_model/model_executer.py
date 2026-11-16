@@ -571,6 +571,7 @@ class ModelExecuter:
                 **ModelExecuter._get_neuron_model_kwargs(arguments),
                 **ModelExecuter._get_synaptic_adaptation_model_kwargs(arguments),
             },  # Pass kwargs to generate neuron and synaptic adaptation modules.
+            optogenetic_stimulation=arguments.optogenetic_stimulation,
         )
 
     def _init_criterion(self, arguments) -> nn.Module:
