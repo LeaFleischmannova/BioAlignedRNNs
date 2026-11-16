@@ -193,6 +193,17 @@ class ModelLayer(nn.Module):
         # Apply RNN linearity step.
         rnn_out = self.rnn_cell(input_data, hidden)
 
+        # Apply optogenetic stimulation to the excitatory input of layer E2/3.
+        if self.layer_name == LayerType.V1_EXC_L23.value:
+            if self.model_type in nn_model.globals.SEPARATE_MODELS:
+                # Add stimulation to the excitatory input, leaving inhibition unchanged.
+                rnn_out = (rnn_out[0] + opto_input, rnn_out[1])
+            elif self.model_type in nn_model.globals.JOINT_MODELS:
+                 # Add stimulation to the combined excitatory and inhibitory input.
+                rnn_out = rnn_out + opto_input
+            else:
+                raise ValueError("Unsupported model type")
+
         # Apply non-linearity (either function or DNN model of neuron).
         complexity_result, neuron_hidden = self.apply_complexity(rnn_out, neuron_hidden)
 

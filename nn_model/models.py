@@ -157,12 +157,12 @@ class PrimaryVisualCortexModel(nn.Module):
 
         self.layer_sizes = layer_sizes  # Needed for model architecture definition
 
-        self.use_opto = True    # TODO add --use_opto option
+        self.use_opto = True    # TODO Add --use_opto CLI argument for enabling/disabling optogenetic input.
 
         self.opto_module = OptoConvToExcL23(
             n_e23_neurons=layer_sizes[LayerType.V1_EXC_L23.value],
-            video_height=16,
-            video_width=16,
+            video_height=400,
+            video_width=400,
             n_filters=8,
         )
 
@@ -748,10 +748,11 @@ class PrimaryVisualCortexModel(nn.Module):
             layer: [] for layer in PrimaryVisualCortexModel.layers_input_parameters
         }
 
+        inputs = inputs.copy()
         opto_video = inputs.pop("OPTO_VIDEO", None)
 
         if opto_video is not None:
-            opto_video = opto_video.to(nn_model.globals.DEVICE)
+            opto_video = opto_video.to(nn_model.globals.DEVICE)     # move optogenetic video to gpu
             opto_e23 = self.opto_module(opto_video)
         else:
             opto_e23 = None
