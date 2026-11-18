@@ -32,4 +32,4 @@ test_analysis_results/
 
 # My additions
 .venv-opto-test/
-lea-tests/
+lea_tests/
