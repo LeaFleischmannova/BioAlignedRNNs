@@ -30,4 +30,6 @@ conference_plots/
 dataset_export/
 test_analysis_results/
 
+# My additions
 .venv-opto-test/
+lea-tests/
