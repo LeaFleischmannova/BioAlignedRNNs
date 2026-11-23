@@ -795,8 +795,7 @@ class PrimaryVisualCortexModel(nn.Module):
                 opto_current_time = None
                 if opto_input_e23 is not None:
                     if self.training:
-                        # training forward gets only one visible time step,
-                        # so opto_e23 has time dimension 1
+                        # training forward gets only one visible time step, so opto_e23 has time dimension 1
                         opto_current_time = opto_input_e23[:, 0, :]
                     else:
                         opto_current_time = opto_input_e23[:, visible_time, :]
